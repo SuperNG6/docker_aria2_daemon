@@ -1,14 +1,14 @@
-FROM lsiobase/alpine:3.13 as builder
+FROM lsiobase/alpine:3.16 as builder
 
 # download static aria2c && AriaNg AllInOne
 RUN apk add --no-cache curl unzip \
     && ARIANG_VER=$(wget -qO- https://api.github.com/repos/mayswind/AriaNg/tags | grep 'name' | cut -d\" -f4 | head -1 ) \
-    && wget -P /tmp https://github.com/mayswind/AriaNg/releases/download/${ARIANG_VER}/AriaNg-${ARIANG_VER}-AllInOne.zip \
-    && unzip /tmp/AriaNg-${ARIANG_VER}-AllInOne.zip -d /tmp \
+    && wget -P /tmp https://github.com/mayswind/AriaNg/releases/download/${ARIANG_VER}/AriaNg-${ARIANG_VER}.zip \
+    && unzip /tmp/AriaNg-${ARIANG_VER} -d /tmp/ariang \
     && curl -fsSL https://git.io/docker-aria2c.sh | bash
 
 # install static aria2c
-FROM lsiobase/alpine:3.13
+FROM lsiobase/alpine:3.16
 
 # set label
 LABEL maintainer="NG6"
@@ -19,7 +19,7 @@ ENV TZ=Asia/Shanghai UT=true SECRET=yourtoken CACHE=128M QUIET=true \
 # copy local files && aria2c
 COPY root/ /
 COPY darkhttpd/ /etc/cont-init.d/
-COPY --from=builder /tmp/index.html /www/index.html
+COPY --from=builder /tmp/ariang /www/ariang
 COPY --from=builder /usr/local/bin/aria2c /usr/local/bin/aria2c
 
 # install
