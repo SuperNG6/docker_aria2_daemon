@@ -1,14 +1,14 @@
-FROM lsiobase/alpine:3.16 as builder
+FROM superng6/alpine:3.21 AS builder
 
 # download static aria2c && AriaNg AllInOne
-RUN apk add --no-cache curl unzip \
+RUN apk add --no-cache curl wget unzip \
     && ARIANG_VER=$(wget -qO- https://api.github.com/repos/mayswind/AriaNg/tags | grep 'name' | cut -d\" -f4 | head -1 ) \
     && wget -P /tmp https://github.com/mayswind/AriaNg/releases/download/${ARIANG_VER}/AriaNg-${ARIANG_VER}.zip \
     && unzip /tmp/AriaNg-${ARIANG_VER} -d /tmp/ariang \
     && curl -fsSL https://git.io/docker-aria2c.sh | bash
 
 # install static aria2c
-FROM lsiobase/alpine:3.16
+FROM superng6/alpine:3.21
 
 # set label
 LABEL maintainer="NG6"
