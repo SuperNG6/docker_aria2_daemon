@@ -120,10 +120,10 @@ enable-peer-exchange=true
 # 期望下载速度，Aria2会临时提高连接数以提高下载速度，单位K或M。默认:50K
 bt-request-peer-speed-limit=10M
 # 客户端伪装, PT需要保持user-agent和peer-agent两个参数一致
-user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36
-#user-agent=qBittorrent v4.6.6
-peer-agent=qBittorrent v4.6.6
-peer-id-prefix=-qB4660-
+user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36
+#user-agent=qBittorrent v5.0.2
+peer-agent=qBittorrent v5.0.2
+peer-id-prefix=-qB50-
 #peer-agent=uTorrentMac/1870(43796)
 #peer-id-prefix=-UM1870-
 #peer-agent=Deluge 1.3.15
@@ -152,19 +152,10 @@ bt-remove-unselected-file=true
 #http-want-digest=false
 
 ## 执行额外命令 ##
-
-# 下载停止后执行的命令（下载停止包含下载错误和下载完成这两个状态，如果没有单独设置，则执行此项命令。）
-# 移动文件或文件夹至回收站/downloads/recycle,并删除.aria2后缀名文件
-on-download-stop=/aria2/script/stop.sh
-# 下载完成后执行的命令（移动文件或文件夹到/downloads/recycle)
-on-download-complete=/aria2/script/completed.sh
-# 下载错误后执行的命令（下载停止包含下载错误这个状态，如果没被设置或被注释，则执行下载停止后执行的命令。）
-#on-download-error=
-# 下载暂停后执行的命令
-# 显示下载任务信息
-on-download-pause=/aria2/script/pause.sh
-# 下载开始后执行的命令
-on-download-start=/aria2/script/start.sh
+on-download-complete=/aria2/scripts/actions/completed.sh
+on-download-stop=/aria2/scripts/actions/stop.sh
+on-download-pause=/aria2/scripts/actions/pause.sh
+on-download-start=/aria2/scripts/actions/start.sh
 
 ## BT服务器 ##
 bt-tracker=

@@ -1,9 +1,23 @@
 #!/usr/bin/with-contenv bash
+# /etc/cont-init.d/40-config
+# 设置权限脚本
 
-# permissions
-chown -R abc:abc \
-    /config \
-    /downloads
-  
-chmod a+x \
-  /aria2/script/*
+set -euo pipefail
+
+# 引入模块（可选，如果需要使用日志模块）
+. /aria2/scripts/core/logging.sh
+
+# -----------------------------
+# 设置目录和文件的权限
+# -----------------------------
+log_info "设置 /config 和 /downloads 目录的权限..."
+chown -R abc:abc /config /downloads
+chmod -R 755 /config /downloads
+log_info "权限设置完成: /config 和 /downloads"
+
+# -----------------------------
+# 确保脚本文件具有执行权限
+# -----------------------------
+log_info "设置 /aria2/scripts 下脚本的执行权限..."
+chmod a+x /aria2/scripts/core/* /aria2/scripts/actions/* /aria2/scripts/tracker/*
+log_info "scripts权限设置完成"

@@ -1,69 +1,96 @@
 #!/usr/bin/with-contenv bash
+# 初始化配置文件和目录，重构版
 
-# make folders
-mkdir -p \
-	/config/ssl \
-  /config/logs \
-  /config/backup-torrent \
-  /downloads/completed \
-  /downloads/recycle
+set -euo pipefail
 
-# copy files
-if [[ ! -e /config/aria2.conf ]]
-then
-  cp /aria2/conf/aria2.conf.default /config/aria2.conf
+# 引入模块
+. /aria2/scripts/core/config.sh
+. /aria2/scripts/core/logging.sh
+
+# -----------------------------
+# 1) 初始化目录结构
+# -----------------------------
+log_info "初始化目录结构..."
+declare -a REQUIRED_DIRS=(
+    "/config/ssl"
+    "/config/logs"
+    "/config/backup-torrent"
+    "/downloads/completed"
+    "/downloads/recycle"
+    "/downloads/move-failed"  # 失败任务的文件夹
+)
+
+for dir in "${REQUIRED_DIRS[@]}"; do
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p "$dir"
+        log_info "创建目录: $dir"
+    fi
+done
+
+# -----------------------------
+# 2) 初始化配置文件
+# -----------------------------
+log_info "初始化配置文件..."
+declare -a CONFIG_FILES=(
+    "/config/aria2.conf:/aria2/conf/aria2.conf.default"
+    "/config/setting.conf:/aria2/conf/setting.conf"
+    "/config/文件过滤.conf:/aria2/conf/文件过滤.conf"
+    "/config/aria2.session:"
+    "/config/dht.dat:"
+)
+
+for file_mapping in "${CONFIG_FILES[@]}"; do
+    src="${file_mapping##*:}" # 默认文件路径
+    dest="${file_mapping%%:*}" # 目标文件路径
+
+    if [[ ! -f "$dest" ]]; then
+        if [[ -n "$src" && -f "$src" ]]; then
+            cp "$src" "$dest"
+            log_info "复制默认配置文件: $src -> $dest"
+        else
+            touch "$dest"
+            log_info "创建空文件: $dest"
+        fi
+    fi
+done
+
+# -----------------------------
+# 3) 更新配置文件 (setting.conf)
+# -----------------------------
+if [[ -f /config/setting.conf ]]; then
+    log_info "更新配置文件: /config/setting.conf"
+    load_config
+    update_config
 fi
 
-if [[ ! -e /config/setting.conf ]]
-then
-  cp /aria2/conf/setting.conf /config/setting.conf
+# -----------------------------
+# 4) 检查并迁移旧日志文件
+# -----------------------------
+log_info "检查并迁移旧日志文件..."
+if compgen -G "/config/*.log" > /dev/null; then
+    mv /config/*.log /config/logs/
+    log_info "已迁移旧日志文件到 /config/logs/ 目录"
 fi
 
-# 保留配置、更新修改配置文件
-if [[ -e /config/setting.conf ]]
-then
-  . /aria2/script/setting
-  SED_CONF
-fi
+# -----------------------------
+# 5) 创建日志文件
+# -----------------------------
+declare -a LOG_FILES=(
+    "/config/logs/move.log"
+    "/config/logs/recycle.log"
+    "/config/logs/delete.log"
+    "/config/logs/文件过滤日志.log"
+)
 
-if [[ ! -e /config/文件过滤.conf ]]
-then
-  cp /aria2/conf/文件过滤.conf /config/文件过滤.conf
-fi
+for log_file in "${LOG_FILES[@]}"; do
+    if [[ ! -f "$log_file" ]]; then
+        touch "$log_file"
+        log_info "创建日志文件: $log_file"
+    fi
+done
 
-if [[ ! -e /config/aria2.session ]]
-then
-  touch /config/aria2.session
-fi
-
-if [[ ! -e /config/dht.dat ]]
-then
-  touch /config/dht.dat
-fi
-
-# 2021.03.15 变更：日志文件地址变更为`/config/logs`
-if [[ -e /config/move.log || -e /config/recycle.log || -e /config/delete.log || -e /config/文件过滤日志.log ]]
-then
-  mv /config/*.log /config/logs/
-fi
-
-# 创建日志文件
-if [[ ! -e /config/logs/move.log ]]
-then
-  touch /config/logs/move.log
-fi
-
-if [[ ! -e /config/logs/recycle.log ]]
-then
-  touch /config/logs/recycle.log
-fi
-
-if [[ ! -e /config/logs/delete.log ]]
-then
-  touch /config/logs/delete.log
-fi
-
-if [[ ! -e /config/logs/文件过滤日志.log ]]
-then
-  touch /config/logs/文件过滤日志.log
-fi
+# -----------------------------
+# 6) 脚本完成
+# -----------------------------
+log_info "20-config 脚本执行完成：目录、配置、日志均已初始化完成。"
+exit 0
